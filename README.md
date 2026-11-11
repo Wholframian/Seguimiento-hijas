@@ -27,8 +27,7 @@ Sin configurar Supabase arranca en **modo demostración** (datos solo en ese nav
    donde se publique la app.
 2. **Claves:** en *Project Settings > API* copia la *Project URL* y la clave *anon public*.
    - En local: copia `.env.example` a `.env.local` y rellénalo.
-   - En GitHub: *Settings > Secrets and variables > Actions > Variables*, crea
-     `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY`.
+   - Para la versión publicada: están en `.env.production` (la clave *anon* es pública por diseño).
 3. **Publicar:** en GitHub, *Settings > Pages > Source: GitHub Actions*. Cada push a `main` publica la app.
 4. **Uso:** uno crea su cuenta y la familia; el otro crea su cuenta y elige *Tengo un código*
    (el código está en Ajustes).
