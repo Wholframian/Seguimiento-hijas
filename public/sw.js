@@ -1,6 +1,6 @@
 // Service worker sencillo: guarda la app para que abra rápido y sin conexión.
 // Los datos siempre se piden a Supabase (nunca se guardan aquí).
-const CACHE = 'hijas-v1'
+const CACHE = 'hijas-v2'
 self.addEventListener('install', () => self.skipWaiting())
 self.addEventListener('activate', (e) => {
   e.waitUntil(caches.keys().then((ks) => Promise.all(ks.filter((k) => k !== CACHE).map((k) => caches.delete(k)))).then(() => self.clients.claim()))

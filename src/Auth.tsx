@@ -25,7 +25,7 @@ export function Login() {
     <div className="center-page">
       <div className="card auth">
         <div className="logo">🌼</div>
-        <h1>Nuestras hijas</h1>
+        <h1>Malen</h1>
         <p className="muted">Tomas, sueño, pañales, salud y más, compartido en familia.</p>
         {api.demo && <p className="banner">Modo demostración: los datos se guardan solo en este navegador.</p>}
         <form onSubmit={submit} className="stack">
