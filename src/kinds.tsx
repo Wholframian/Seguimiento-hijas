@@ -1,8 +1,22 @@
+import type { ReactNode } from 'react'
 import type { Entry, Kind } from './types'
+
+/** Icono de pañal (no existe emoji de pañal). Se dibuja al tamaño del texto, como un emoji. */
+function DiaperIcon() {
+  return (
+    <svg viewBox="1 3.5 22 17" width="1.3em" height="1em" style={{ verticalAlign: '-0.15em' }} aria-label="Pañal" role="img">
+      <path d="M3 6.5h18v3c0 1.8-2.6 3.2-4.6 6-1.2 1.7-2.4 3.3-4.4 3.3s-3.2-1.6-4.4-3.3C5.6 12.7 3 11.3 3 9.5z" fill="#fff" stroke="#5f7f9f" strokeWidth="1.2" strokeLinejoin="round" />
+      <path d="M3 6.5h18v2.6H3z" fill="#cfe3f5" stroke="#5f7f9f" strokeWidth="1.2" strokeLinejoin="round" />
+      <rect x="1.6" y="9.6" width="3.4" height="2.6" rx=".9" fill="#f4a3b4" stroke="#5f7f9f" strokeWidth=".8" />
+      <rect x="19" y="9.6" width="3.4" height="2.6" rx=".9" fill="#f4a3b4" stroke="#5f7f9f" strokeWidth=".8" />
+      <path d="M7.4 11.6c1 2.3 2.3 4.3 4.6 4.3s3.6-2 4.6-4.3" fill="none" stroke="#9fb7cf" strokeWidth="1" strokeLinecap="round" strokeDasharray="1.4 1.2" />
+    </svg>
+  )
+}
 
 export interface KindInfo {
   label: string
-  icon: string
+  icon: ReactNode
   color: string
   /** Tiene inicio y fin (cronómetro). */
   timed?: boolean
@@ -11,7 +25,7 @@ export interface KindInfo {
 export const KINDS: Record<Kind, KindInfo> = {
   feed: { label: 'Toma', icon: '🍼', color: '#f4a261', timed: true },
   sleep: { label: 'Sueño', icon: '🌙', color: '#7b8cde', timed: true },
-  diaper: { label: 'Pañal', icon: '🧷', color: '#8ab17d' },
+  diaper: { label: 'Pañal', icon: <DiaperIcon />, color: '#8ab17d' },
   bath: { label: 'Baño', icon: '🛁', color: '#4cc9d0' },
   temperature: { label: 'Temperatura', icon: '🌡️', color: '#e76f51' },
   medicine: { label: 'Medicina', icon: '💊', color: '#c77dff' },
