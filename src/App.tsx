@@ -23,7 +23,14 @@ export default function App() {
   const [m, setM] = useState<Membership | null | undefined>(undefined)
   const [kids, setKids] = useState<Child[]>([])
   const [childId, setChildId] = useState<string | null>(store.get('child'))
-  const [tab, setTab] = useState<Tab>('today')
+  const [tab, setTabState] = useState<Tab>('today')
+  const [dir, setDir] = useState<'left' | 'right'>('right')
+  const setTab = (t: Tab) => {
+    const a = TABS.findIndex((x) => x.id === tab), b = TABS.findIndex((x) => x.id === t)
+    setDir(b >= a ? 'right' : 'left')
+    setTabState(t)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
   const [version, setVersion] = useState(0)
   const [err, setErr] = useState<string | null>(null)
 
@@ -80,18 +87,21 @@ export default function App() {
         </div>
       </header>
       {err && <p className="error" onClick={() => setErr(null)}>{err}</p>}
-      <main>
+      <main key={`${tab}-${child.id}`} className={`tab-enter ${dir}`}>
         {tab === 'today' && <Today ctx={ctx} />}
         {tab === 'history' && <History ctx={ctx} />}
         {tab === 'charts' && <Charts ctx={ctx} />}
         {tab === 'settings' && <Settings m={m} kids={kids} refresh={refresh} />}
       </main>
-      <nav className="tabs">
+      <nav className="tabs" style={{ ['--k' as any]: TABS.findIndex((t) => t.id === tab) }}>
+        <div className="tabs-in">
+        <span className="tab-ind" />
         {TABS.map((t) => (
           <button key={t.id} className={tab === t.id ? 'on' : ''} onClick={() => setTab(t.id)}>
             <span>{t.icon}</span>{t.label}
           </button>
         ))}
+        </div>
       </nav>
     </div>
   )

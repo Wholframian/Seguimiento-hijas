@@ -30,6 +30,8 @@ export function EntryForm({ kind, childId, entry, onSave, onDelete, onClose }: P
   const [note, setNote] = useState(entry?.note ?? '')
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState<string | null>(null)
+  const [closing, setClosing] = useState(false)
+  const close = () => { if (closing) return; setClosing(true); setTimeout(onClose, 200) }
   const set = (k: string, v: any) => setData((d) => ({ ...d, [k]: v }))
 
   const isBreast = kind === 'feed' && String(data.type).startsWith('breast')
@@ -47,17 +49,17 @@ export function EntryForm({ kind, childId, entry, onSave, onDelete, onClose }: P
       if (!timer && showEnd && end) ended_at = fromLocalInput(end)
       if (ended_at && ended_at < started_at) throw new Error('El fin no puede ser anterior al inicio')
       await onSave({ kind, child_id: childId, started_at, ended_at, data: clean, note: note.trim() || null })
-      onClose()
+      close()
     } catch (x: any) { setErr(x.message); setBusy(false) }
   }
 
   return (
-    <div className="sheet-bg" onClick={onClose}>
+    <div className={closing ? 'sheet-bg closing' : 'sheet-bg'} onClick={close}>
       <div className="sheet" onClick={(e) => e.stopPropagation()}>
         <div className="sheet-head">
           <span className="kind-dot" style={{ background: info.color }}>{info.icon}</span>
           <h2>{entry ? 'Editar' : 'Nuevo'}: {info.label.toLowerCase()}</h2>
-          <button className="icon" onClick={onClose} aria-label="Cerrar">✕</button>
+          <button className="icon" onClick={close} aria-label="Cerrar">✕</button>
         </div>
 
         <div className="stack">
@@ -118,7 +120,7 @@ export function EntryForm({ kind, childId, entry, onSave, onDelete, onClose }: P
               <button className="secondary" disabled={busy} onClick={() => save(true)}>▶ Empezar ahora</button>}
             <button className="primary" disabled={busy || (kind === 'temperature' && !data.value)} onClick={() => save(false)}>Guardar</button>
           </div>
-          {entry && onDelete && <button className="danger link" disabled={busy} onClick={async () => { if (confirm('¿Borrar este registro?')) { setBusy(true); await onDelete(); onClose() } }}>Borrar registro</button>}
+          {entry && onDelete && <button className="danger link" disabled={busy} onClick={async () => { if (confirm('¿Borrar este registro?')) { setBusy(true); await onDelete(); close() } }}>Borrar registro</button>}
         </div>
       </div>
     </div>
