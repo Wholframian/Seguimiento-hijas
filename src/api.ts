@@ -79,9 +79,16 @@ function supabaseApi(sb: SupabaseClient): Api {
     },
     async deleteChild(id) { check(await sb.from('children').delete().eq('id', id)) },
     async listEntries(hid, from, to) {
-      return check(await sb.from('entries').select('*').eq('household_id', hid)
-        .gte('started_at', from.toISOString()).lt('started_at', to.toISOString())
-        .order('started_at', { ascending: false }).limit(2000)) as Entry[]
+      // Supabase devuelve como mucho 1000 filas por petición: pedimos por páginas.
+      const out: Entry[] = []
+      for (let page = 0; page < 10; page++) {
+        const rows = check(await sb.from('entries').select('*').eq('household_id', hid)
+          .gte('started_at', from.toISOString()).lt('started_at', to.toISOString())
+          .order('started_at', { ascending: false }).range(page * 1000, page * 1000 + 999)) as Entry[]
+        out.push(...rows)
+        if (rows.length < 1000) break
+      }
+      return out
     },
     async listEntriesByKind(hid, childId, kind) {
       return check(await sb.from('entries').select('*').eq('household_id', hid).eq('child_id', childId).eq('kind', kind)
