@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { POO_COLORS, type PooColor } from './firstDays'
 import { DIAPER_TYPES, FEED_TYPES, HEALTH_TYPES, KINDS, TEMP_METHODS } from './kinds'
 import type { Entry, Kind, NewEntry } from './types'
 import { fromLocalInput, toLocalInput } from './util'
@@ -74,6 +75,21 @@ export function EntryForm({ kind, childId, entry, onSave, onDelete, onClose }: P
 
           {kind === 'diaper' && <>
             <Choice options={DIAPER_TYPES} value={data.type} onChange={(v) => set('type', v)} />
+            {(data.type === 'poo' || data.type === 'both') && <>
+              <span className="field-label">Color de la caca</span>
+              <div className="chips">
+                {(Object.entries(POO_COLORS) as [PooColor, (typeof POO_COLORS)[PooColor]][]).map(([k, c]) => (
+                  <button type="button" key={k} className={data.color === k ? 'chip on' : 'chip'} onClick={() => set('color', data.color === k ? '' : k)} title={c.hint}>
+                    <span className="swatch" style={{ background: c.swatch }} />{c.label}
+                  </button>
+                ))}
+              </div>
+              {data.color && <small className={POO_COLORS[data.color as PooColor]?.alert ? 'danger' : 'muted'}>{POO_COLORS[data.color as PooColor]?.hint}</small>}
+              <label className="check"><input type="checkbox" checked={!!data.blood} onChange={(e) => set('blood', e.target.checked)} /> Con sangre (hilos o manchas rojas)</label>
+              <label className="check"><input type="checkbox" checked={!!data.hard} onChange={(e) => set('hard', e.target.checked)} /> Dura, seca o en bolitas</label>
+            </>}
+            {(data.type === 'pee' || data.type === 'both') &&
+              <label className="check"><input type="checkbox" checked={!!data.dark_pee} onChange={(e) => set('dark_pee', e.target.checked)} /> Pis oscuro o manchas naranjas</label>}
             <label className="check"><input type="checkbox" checked={!!data.rash} onChange={(e) => set('rash', e.target.checked)} /> Rojez o irritación</label>
           </>}
 

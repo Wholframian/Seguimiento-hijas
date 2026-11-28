@@ -6,6 +6,7 @@ import { describe, fmtDuration, KIND_ORDER, KINDS, minutesBetween } from './kind
 import { avg, dayStats, NIGHT_END, NIGHT_START, type DayStats } from './stats'
 import type { Child, Entry, Kind, NewEntry } from './types'
 import { addDays, ageText, fmtDayTitle, fmtTime, startOfDay, timeAgo } from './util'
+import { ALERT_SIGNS, dayAlerts, dayOfLife, EMERGENCY, FIRST_DAYS_MAX, FIRST_DAYS_SOURCES, GOAL_TABLE, goalFor, PEE_HINT, POO_COLORS, POO_SIZE_HINT, type PooColor } from './firstDays'
 import { ageInMonths, bandAt, position, SOURCES, stageFor, type Metric, type Source, type Stage } from './who'
 
 export interface Ctx {
@@ -225,6 +226,91 @@ function WhoCard({ child, stage, months, s, partial, growth }: { child: Child; s
   )
 }
 
+/** Guía de pises, cacas y tomas para las 6 primeras semanas. */
+export function FirstDaysGuide({ day }: { day?: number }) {
+  return (
+    <div className="guide">
+      <h4>Lo normal, día a día (como mínimo)</h4>
+      <div className="goal-table">
+        <span className="gt-h">Día</span><span className="gt-h">Pises</span><span className="gt-h">Cacas</span><span className="gt-h">Cómo es la caca</span>
+        {GOAL_TABLE.map((r, i) => {
+          const on = day !== undefined && (i < 4 ? day === i + 1 : i === 4 ? day === 5 || day === 6 : day >= 7)
+          return [r.day, r.pee, r.poo, r.looks].map((c, j) => <span key={`${i}-${j}`} className={on ? 'on' : ''}>{c}</span>)
+        })}
+      </div>
+      <p className="muted">{POO_SIZE_HINT} A partir de las 3-6 semanas muchos bebés hacen menos cacas: si está bien, come con ganas y gana peso, es normal.</p>
+      <h4>¿De qué color?</h4>
+      <ul className="colors">
+        {(Object.entries(POO_COLORS) as [PooColor, (typeof POO_COLORS)[PooColor]][]).map(([k, c]) => (
+          <li key={k}><span className="swatch" style={{ background: c.swatch }} /><b>{c.label}</b> <span className={c.alert ? 'danger' : 'muted'}>{c.hint}</span></li>
+        ))}
+        <li><span className="swatch" style={{ background: '#b23a3a' }} /><b>Con sangre</b> <span className="danger">Hilos o manchas rojas: consulta</span></li>
+        <li><span className="swatch" style={{ background: '#6b5a3e' }} /><b>Dura, seca o en bolitas</b> <span className="danger">Y le cuesta mucho expulsarla</span></li>
+      </ul>
+      <p className="muted"><b className="ink">El pis.</b> {PEE_HINT}</p>
+      <h4>⚠️ Llama a tu matrona o pediatra si…</h4>
+      <ul className="alerts">{ALERT_SIGNS.map((a) => <li key={a}>{a}</li>)}</ul>
+      <p className="emergency">🚑 {EMERGENCY}</p>
+      <details className="sources">
+        <summary>Fuentes y notas</summary>
+        <ul>{FIRST_DAYS_SOURCES.map((x) => <li key={x.url}><a href={x.url} target="_blank" rel="noreferrer">{x.label}</a></li>)}</ul>
+        <p className="muted">Hoja «Pises y cacas» de vuestra matrona. Las cifras son orientativas para bebés con lactancia materna; cada bebé es distinto y no sustituye la valoración de la matrona o pediatra.</p>
+      </details>
+    </div>
+  )
+}
+
+function FirstDaysCard({ child, day, s, entries, partial }: { child: Child; day: number; s: DayStats; entries: Entry[]; partial: boolean }) {
+  const g = goalFor(day)
+  const diapers = entries.filter((e) => e.kind === 'diaper')
+  const flags = {
+    colors: diapers.map((e) => e.data.color).filter(Boolean) as PooColor[],
+    blood: diapers.some((e) => e.data.blood),
+    hard: diapers.some((e) => e.data.hard),
+    darkPee: diapers.some((e) => e.data.dark_pee),
+  }
+  const alerts = dayAlerts(day, s, flags, partial, s.maxTemp)
+  const rows: { icon: ReactNode; label: string; v: number; goal: number | null; goalText: string; color: string }[] = [
+    { icon: KINDS.feed.icon, label: 'Tomas', v: s.feeds, goal: g.feeds, goalText: `al menos ${g.feeds}`, color: KINDS.feed.color },
+    { icon: KINDS.diaper.icon, label: 'Pises', v: s.pee, goal: g.pee, goalText: day >= 4 ? '6 a 8' : `${g.pee}`, color: KINDS.diaper.color },
+    { icon: '💩', label: 'Cacas', v: s.poo, goal: g.poo, goalText: g.pooText, color: '#a47148' },
+  ]
+  return (
+    <section className="card first-card">
+      <div className="card-head"><h3>Primeros días</h3><span className="pill accent">Día {day} de vida</span></div>
+      {rows.map((r) => {
+        const done = r.goal === null || r.v >= r.goal
+        return (
+          <div key={r.label} className="who-row">
+            <span className="who-icon">{r.icon}</span>
+            <div className="who-body">
+              <div className="who-title">
+                <b>{r.label}: {r.v}{r.goal !== null && <span className="muted"> / {r.goalText}</span>}</b>
+                {r.goal !== null && (done ? <span className="status ok">Cumplido</span> : partial ? <span className="pill">faltan {r.goal - r.v}</span> : <span className="status low">Por debajo</span>)}
+              </div>
+              {r.goal !== null
+                ? <div className="split-bar"><span style={{ width: `${Math.min(100, (r.v / r.goal) * 100)}%`, background: r.color }} /></div>
+                : <p className="muted">Objetivo: {r.goalText}.</p>}
+            </div>
+          </div>
+        )
+      })}
+      <p className="muted first-looks">Caca esperada: <b className="ink">{g.pooLooks}</b></p>
+      {alerts.length > 0 && (
+        <div className="alert-box">
+          <b>⚠️ Para comentar con la matrona o pediatra</b>
+          <ul>{alerts.map((a) => <li key={a}>{a}</li>)}</ul>
+        </div>
+      )}
+      <details className="guide-toggle">
+        <summary>Ver la guía de pises y cacas</summary>
+        <FirstDaysGuide day={day} />
+      </details>
+      <small className="muted">Mínimos orientativos con lactancia materna para {child.name}. Al registrar una caca puedes anotar su color.</small>
+    </section>
+  )
+}
+
 export function Today({ ctx }: { ctx: Ctx }) {
   const [day, setDay] = useState(() => startOfDay(new Date()))
   const from = useMemo(() => addDays(day, -1), [day])
@@ -242,6 +328,7 @@ export function Today({ ctx }: { ctx: Ctx }) {
   const stats = entries ? dayStats(entries, day) : null
   const months = ageInMonths(ctx.child.birth_date, isToday ? new Date() : addDays(day, 1))
   const stage = stageFor(months)
+  const lifeDay = dayOfLife(ctx.child.birth_date, day)
 
   async function stop(e: Entry) {
     await api.updateEntry(e.id, { ended_at: new Date().toISOString() })
@@ -287,6 +374,7 @@ export function Today({ ctx }: { ctx: Ctx }) {
       {!entries && !err && <div className="skeleton" />}
       {stats && (
         <div className="today-grid swap" key={day.getTime()}>
+          {lifeDay !== null && lifeDay <= FIRST_DAYS_MAX && <FirstDaysCard child={ctx.child} day={lifeDay} s={stats} entries={dayEntries} partial={isToday} />}
           <DaySummary s={stats} stage={stage} partial={isToday} />
           <WhoCard child={ctx.child} stage={stage} months={months} s={stats} partial={isToday} growth={growth} />
         </div>
