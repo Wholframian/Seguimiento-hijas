@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { POO_COLORS, type PooColor } from './firstDays'
 import type { Entry, Kind } from './types'
 
 /** Icono de pañal (no existe emoji de pañal). Se dibuja al tamaño del texto, como un emoji. */
@@ -92,6 +93,10 @@ export function describe(e: Entry): string {
       break
     case 'diaper':
       parts.push(DIAPER_TYPES[d.type] ?? 'Pañal')
+      if (d.color && POO_COLORS[d.color as PooColor]) parts.push(POO_COLORS[d.color as PooColor].label.toLowerCase())
+      if (d.blood) parts.push('con sangre')
+      if (d.hard) parts.push('dura')
+      if (d.dark_pee) parts.push('pis oscuro')
       if (d.rash) parts.push('rojez')
       break
     case 'bath':
